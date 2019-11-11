@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t doodee24/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true doodee24/react-test npm test
+
+after_success:
+  - docker build -t doodee24/multi-client ./client
+  - docker build -t doodee24/multi-nginx ./nginx
+  - docker build -t doodee24/multi-server ./server
+  - docker build -t doodee24/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push doodee24/multi-client
+  - docker push doodee24/multi-nginx
+  - docker push doodee24/multi-server
+  - docker push doodee24/multi-worker
